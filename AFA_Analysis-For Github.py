@@ -1,3 +1,4 @@
+# Code is python 2.7
 # Import the tools used in the analysis
 import numpy
 import scipy
@@ -77,7 +78,7 @@ def getInput():
     # This function asks the user for an input file.
     print " must type exactly with extension and be within single parenthesis"
     filename=input("Type file name:")
-    # Imports the timestamp as well as position
+    # Imports the timestamp as well as position which are in the first 3 collumns
     newlymadearray=np.genfromtxt(filename, dtype=float, usecols=(0,1,2))
     numpy.shape(newlymadearray)
     return newlymadearray
@@ -112,12 +113,13 @@ def trim_frames_from_list(frames_list):
 
 def simpledistance(a,b,c,d):
     '''
+        computes distance between two points
     '''
     xdist = float(b) - float(a)
     ydist = float(d) - float(c)
     coorddist = numpy.sqrt(((float(ydist)**2+float(xdist)**2)))
     if coorddist < 1.1:
-        #Below 1.1 means that the
+        #Below 1.1 means that the distance is one pixel or less which we dont consider meaningful
         coorddist = 0.0
     return coorddist
 
@@ -359,6 +361,7 @@ def distance_total_coordinates(flydata):
 
 def cumulativedist(distanceinfo):
     '''
+        calculates the cumulative distance traveled, for use to put into the 'master matrix'
     '''
     cumulativedistance=distance_total_coordinates(distanceinfo)
     sumdist=numpy.sum(cumulativedistance)
@@ -368,6 +371,9 @@ def cumulativedist(distanceinfo):
     return fornewlist
 
 def distntime_total_coordinates(flydata):
+    '''
+        computs the velocity during the test on average
+    '''
     cumulativedist=0
     reading=0
     disttimelist = []
@@ -381,25 +387,24 @@ def distntime_total_coordinates(flydata):
         y1=int(flydata[int(reading)][2])
         coordinatedist=simpledistance(x1,x2,y1,y2)
         time=float((time2-time1)/float(1000)) #converts time to seconds
+        # make the distance a real measurement
         correcteddist=([float(coordinatedist)/float(pixelspercm)])
         correctdistarray=numpy.array(correcteddist)
         reading = reading + 1
-        pointvel=float(float(correctdistarray)/float(time))
-        disttimelist=disttimelist + [pointvel]
+        pointvel=float(float(correctdistarray)/float(time)) # give an individual velocity
+        disttimelist=disttimelist + [pointvel] # sum all the velocities
     disttimearray=numpy.array(disttimelist)
-    averagevel=(numpy.sum(disttimearray)/float(len(disttimearray)))
+    averagevel=(numpy.sum(disttimearray)/float(len(disttimearray))) #total velocity divided by numebr of readings
     fornewlist=[]
     newpoint = [['velocity during test (cm/sec)',averagevel]]
     return newpoint
 
 def distntime_zonevelocity(flydata):
+    '''
+        computes the amount of time the fly is at a speed in several speed 'bins'
+    '''
     cumulativedist=0
-    flylength=12 #define value
-    bodylenthresh=0.5 # can define value
-    #pixelspercm=50 #please define value
     reading=0
-    #flylength=12 #define value #720
-    #pixelspercm=37 #please define value #720
     disttimelist = []
     while reading < (len(flydata)-1):
         correcteddist=0
@@ -460,6 +465,9 @@ def distntime_zonevelocity(flydata):
     return tosend
 
 def velineachradialzone(importfile):
+    '''
+        compute the velocity in each radial zone
+    '''
     reading=0
     radialvel=[]
     while reading < (len(importfile)-1):
@@ -504,6 +512,9 @@ def velineachradialzone(importfile):
     return tosend
 
 def velvsr(importfile):
+    '''
+        makes a heatmap, not in use
+    '''
     reading=0
     radialvel=[]
     maxvel=0.0
@@ -561,13 +572,12 @@ def local(desiredlist):
 
 def local_search_plot(desiredlist):
     reading=0
-    #pixelspercm=50
     startingpoint=0
     disttime=[]
     while reading < (len(desiredlist)-1):
         correcteddist=0
         timeread=float(reading[0])
-        ##need to make it use the next reading
+        # need to make it use the next reading
         x2=int(desiredlist[int(reading+1)][1])
         x1=int(desiredlist[int(startingpoint)][1])
         y2=int(desiredlist[int(reading+1)][2])
@@ -583,7 +593,6 @@ def local_search_plot(desiredlist):
     print disttimearray
 
 
-##the problem is below
 def local_search(desiredlist):
     reading=0
     indivDist=0
@@ -782,7 +791,7 @@ def tofile(matrix):
 
 
 def runmodAFA_ANALYSIS():
-    
+    # Runs the command menu so that analysis can begin
     try:
         commandMenu()
     except Exception as inst:
